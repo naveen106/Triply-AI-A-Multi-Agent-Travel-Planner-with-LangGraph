@@ -6,6 +6,7 @@ langchain-tavily
 duckduckgo-search
 requests
 tavily-python
+exa-py
 python-dotenv
 psycopg[binary]==3.3.4
 psycopg_pool==3.3.1

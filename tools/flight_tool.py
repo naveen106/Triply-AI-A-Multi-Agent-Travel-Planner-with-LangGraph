@@ -4,6 +4,7 @@ import os
 import re
 import certifi
 from dotenv import load_dotenv
+import requests
 
 load_dotenv()
 
@@ -17,7 +18,7 @@ os.environ["REQUESTS_CA_BUNDLE"] = certifi.where()
 API_KEY = os.getenv("AVIATION_API_KEY")
 
 
-DEFAULT_ORIGIN_DATA =  os.getenv("DEFAULT_ORIGIN_DATA", "DAC") 
+DEFAULT_ORIGIN_IATA =  os.getenv("DEFAULT_ORIGIN_IATA", "BOM") 
 BASE_URL = "https://api.aviationstack.com/v1/flights"
 AIRPORTS = airportsdata.load('IATA')  # Load IATA airport data
 

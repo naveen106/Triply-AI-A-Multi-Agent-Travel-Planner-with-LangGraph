@@ -19,7 +19,7 @@ COPY requirements.txt uv.lock pyproject.toml ./
 # Upgrade pip and install the `uv` package manager, then use it
 RUN python -m pip install --upgrade pip setuptools wheel \
     && pip install uv \
-    && uv install \
+    && uv add \
     && uv add -r requirements.txt
 
 # Copy application code

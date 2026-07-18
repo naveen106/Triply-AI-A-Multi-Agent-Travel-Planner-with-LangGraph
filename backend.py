@@ -53,13 +53,13 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 if not GROQ_API_KEY:
     raise ValueError("GROQ_API_KEY environment variable is not set. Please add your Groq API key to the .env file.")
 
-GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
-if "prompt-guard" in GROQ_MODEL:
-    GROQ_MODEL = "llama-3.1-8b-instant"
+# GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
+# if "prompt-guard" in GROQ_MODEL:
+    # GROQ_MODEL = "meta-llama/llama-prompt-guard-2-22m"
 
 llm = ChatGroq(
     api_key=GROQ_API_KEY,
-    model="GROQ_MODEL",
+    model="meta-llama/llama-prompt-guard-2-22m",
     temperature=0.7,
     max_tokens=1024,
 )

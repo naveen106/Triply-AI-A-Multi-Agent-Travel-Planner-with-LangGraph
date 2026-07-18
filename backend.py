@@ -53,17 +53,19 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 if not GROQ_API_KEY:
     raise ValueError("GROQ_API_KEY environment variable is not set. Please add your Groq API key to the .env file.")
 
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
+if "prompt-guard" in GROQ_MODEL:
+    GROQ_MODEL = "llama-3.1-8b-instant"
 
 llm = ChatGroq(
     api_key=GROQ_API_KEY,
-    # model="llama-3.1-8b-instant",
-    model="meta-llama/llama-4-scout-17b-16e-instruct",
+    model="GROQ_MODEL",
     temperature=0.7,
-    max_tokens=2048,
+    max_tokens=1024,
 )
 
 
-def _compact_text(value: str, limit: int = 20000) -> str:
+def _compact_text(value: str, limit: int = 15000) -> str:
     """Trim long tool output so the LLM prompt stays within request limits."""
     text = str(value or "")
     if len(text) <= limit:

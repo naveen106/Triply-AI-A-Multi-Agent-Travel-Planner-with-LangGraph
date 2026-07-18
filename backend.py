@@ -53,24 +53,13 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 if not GROQ_API_KEY:
     raise ValueError("GROQ_API_KEY environment variable is not set. Please add your Groq API key to the .env file.")
 
-# GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
-# if "prompt-guard" in GROQ_MODEL:
-    # GROQ_MODEL = "meta-llama/llama-prompt-guard-2-22m"
-
 llm = ChatGroq(
     api_key=GROQ_API_KEY,
-    model="llama-3.1-8b-instant",
+    model="openai/gpt-oss-120b",
     temperature=0.7,
-    max_tokens=1024,
+    max_tokens=2048,
 )
 
-
-def _compact_text(value: str, limit: int = 15000) -> str:
-    """Trim long tool output so the LLM prompt stays within request limits."""
-    text = str(value or "")
-    if len(text) <= limit:
-        return text
-    return text[:limit].rstrip() + "\n...[truncated]"
 
 class TravelState(TypedDict):
     """
@@ -123,15 +112,12 @@ def itinerary_agent(state:TravelState):
     hotel_results = state.get("hotel_results","")
     
 
-    compact_flight_results = _compact_text(flight_results, 2500)
-    compact_hotel_results = _compact_text(hotel_results, 2500)
-
     itinerary_prompt = f"""
     User Query: {query}
     
-    Flight Results: {compact_flight_results}
+    Flight Results: {flight_results}
     
-    Hotel Results: {compact_hotel_results}
+    Hotel Results: {hotel_results}
     
     Please create a practical itinerary, budget-aware and easy to follow.
     """
@@ -142,7 +128,7 @@ def itinerary_agent(state:TravelState):
             HumanMessage(content=itinerary_prompt),
         ])
     except BadRequestError:
-        itinerary_response = AIMessage(content="I could not generate the itinerary because the provided travel data was too large for the model request.")
+        itinerary_response = AIMessage(content="I could not generate the itinerary because the provided travel data was too large for the model request or some other internal server error.")
     
     itinerary_text = itinerary_response.content if itinerary_response else "No itinerary generated."
 
@@ -159,16 +145,16 @@ def itinerary_agent(state:TravelState):
 #===================================
 
 def final_agent(state:TravelState):
-    compact_flight_results = _compact_text(state.get("flight_results", ""), 2000)
-    compact_hotel_results = _compact_text(state.get("hotel_results", ""), 2000)
-    compact_itinerary = _compact_text(state.get("itinerary", ""), 2000)
+    flight_results = state.get("flight_results", "")
+    hotel_results = state.get("hotel_results", "")
+    itinerary = state.get("itinerary", "")
 
     final_prompt = f"""
     Generate the final travel response for the user.
     User Request: {state['user_query']}
-    Flights: {compact_flight_results}
-    Hotels: {compact_hotel_results}
-    Itinerary: {compact_itinerary}
+    Flights: {flight_results}
+    Hotels: {hotel_results}
+    Itinerary: {itinerary}
 
     Format the final answer beautifully usint these sections:
 
@@ -181,8 +167,9 @@ def final_agent(state:TravelState):
 
     Important:
     - Be clear and practical.
+    - Don't give random trip plans if user query is not asking for it.
     - Mention that live flight API may not provide ticket prices if pricing is unavailable.
-    - Keep the response not too lengthy and useful for real travel planning.
+    - Keep the response concise, not lengthy (MUST be under 8000 tokens) and useful for real travel planning.
 
     """
 
@@ -192,7 +179,7 @@ def final_agent(state:TravelState):
             HumanMessage(content=final_prompt),
         ])
     except BadRequestError:
-        response = AIMessage(content="I could not generate the final travel response because the request was too large for the model.")
+        response = AIMessage(content="I could not generate the final travel response because the request was too large for the model or some other internal server error.")
     
     return {
         "messages": [response],

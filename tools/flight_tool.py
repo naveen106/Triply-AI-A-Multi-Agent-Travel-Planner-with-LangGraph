@@ -219,9 +219,7 @@ def resolve_location_to_iata(location: str):
     Converts country/city/airport/IATA into IATA code.
 
     Examples:
-    Bangladesh -> DAC
     Japan -> NRT
-    Dhaka -> DAC
     Tokyo -> NRT
     """
 

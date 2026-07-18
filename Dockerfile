@@ -16,11 +16,9 @@ RUN apt-get update \
 # Copy dependency manifests
 COPY requirements.txt uv.lock pyproject.toml ./
 
-# Upgrade pip and install the `uv` package manager, then use it
+# Upgrade pip and install project dependencies via pip (skip `uv`)
 RUN python -m pip install --upgrade pip setuptools wheel \
-    && pip install uv \
-    && uv add \
-    && uv add -r requirements.txt
+    && pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY . .

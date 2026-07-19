@@ -140,7 +140,7 @@ function downloadPDF() {
     downloadBtn.disabled = true;
 
     const options = {
-        margin: 0.5,
+        margin: 0.4,
         filename: "ai-travel-plan.pdf",
         image: {
             type: "jpeg",
@@ -149,7 +149,8 @@ function downloadPDF() {
         html2canvas: {
             scale: 2,
             useCORS: true,
-            backgroundColor: "#ffffff"
+            backgroundColor: "#ffffff",
+            scrollY: 0
         },
         jsPDF: {
             unit: "in",
@@ -157,17 +158,36 @@ function downloadPDF() {
             orientation: "portrait"
         },
         pagebreak: {
-            mode: ["avoid-all", "css", "legacy"]
+            mode: ["css", "legacy"]
         }
     };
 
+    window.scrollTo(0, 0);
+
+    const clonedPdfContent = pdfContent.cloneNode(true);
+    clonedPdfContent.style.width = "794px";
+    clonedPdfContent.style.maxWidth = "794px";
+    clonedPdfContent.style.boxSizing = "border-box";
+    clonedPdfContent.style.margin = "0";
+    clonedPdfContent.style.position = "fixed";
+    clonedPdfContent.style.top = "0";
+    clonedPdfContent.style.left = "-9999px";
+    document.body.appendChild(clonedPdfContent);
+
     html2pdf()
         .set(options)
-        .from(pdfContent)
+        .from(clonedPdfContent)
         .save()
         .then(() => {
+            document.body.removeChild(clonedPdfContent);
             downloadBtn.textContent = oldText;
             downloadBtn.disabled = false;
+        })
+        .catch(() => {
+            document.body.removeChild(clonedPdfContent);
+            downloadBtn.textContent = oldText;
+            downloadBtn.disabled = false;
+            showError("Could not download PDF.");
         })
         .catch(() => {
             downloadBtn.textContent = oldText;

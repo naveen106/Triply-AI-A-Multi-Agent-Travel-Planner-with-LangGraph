@@ -156,12 +156,12 @@ def final_agent(state:TravelState):
     Hotels: {hotel_results}
     Itinerary: {itinerary}
 
-    Format the final answer beautifully usint these sections:
+    Format the final answer beautifully using these sections:
 
     1. Trip Summary
     2. Flight Details
     3. Hotel Details
-    4. Day-By-Day Itinerary
+    4. Day-By-Day Itinerary. In case of monthly(or more than 7 days) or more lengthy trip, you can use weekly or range of days (or do what u think is better).
     5. Estimated Budget
     6. Final Recommendations
 
@@ -169,7 +169,7 @@ def final_agent(state:TravelState):
     - Be clear and practical.
     - Don't give random trip plans if user query is not asking for it.
     - Mention that live flight API may not provide ticket prices if pricing is unavailable.
-    - Keep the response concise, not lengthy (MUST be under 8000 tokens) and useful for real travel planning.
+    - Keep the response concise and short(MUST), it mustn't be lengthy(just to the point) and must be useful for real travel planning.
 
     """
 
@@ -253,4 +253,3 @@ def run_travel_agent(user_input:str, thread_id: str | None = None):
             "itinerary":result.get("itinerary",""),
             "llm_calls_made":result.get("llm_calls_made",0)
         }
-    

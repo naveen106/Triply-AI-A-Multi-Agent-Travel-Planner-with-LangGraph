@@ -61,7 +61,9 @@ if not GROQ_API_KEY:
 
 llm = ChatGroq(
     api_key=GROQ_API_KEY,
-    model="openai/gpt-oss-120b",
+    # model="llama-3.1-8b-instant",
+    # model="meta-llama/llama-4-scout-17b-16e-instruct",
+    model="qwen/qwen3.6-27b",
     temperature=0.7,
     max_tokens=4048,
     # Ask Groq/Qwen not to include its chain-of-thought in the returned content.

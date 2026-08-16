@@ -1,5 +1,6 @@
 import certifi
 import os
+import re
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -9,7 +10,12 @@ load_dotenv()
 # of root certificates, which can help prevent SSL/TLS errors when making secure connections 
 # to external services.
 os.environ["SSL_CERT_FILE"] = certifi.where() 
-os.environ["REQUESTS_CA_BUNDLE"] = certifi.where() #for setting the CA bundle path for the requests library to the certifi package's certificate bundle. This ensures that HTTPS requests made using the requests library use a trusted set of root certificates, which can help prevent SSL/TLS errors when making secure connections to external services.
+ # for setting the CA bundle path for the requests library to the certifi 
+ # package's certificate bundle. This ensures that HTTPS requests made 
+ # using the requests library use a trusted set of root certificates, 
+ # which can help prevent SSL/TLS errors when making 
+ # secure connections to external services.
+os.environ["REQUESTS_CA_BUNDLE"] = certifi.where()
 
 from typing import TypedDict, Annotated #for type hinting and defining structured data types
 import operator #for sorting the dictionary based on values
@@ -57,9 +63,12 @@ if not GROQ_API_KEY:
 llm = ChatGroq(
     api_key=GROQ_API_KEY,
     # model="llama-3.1-8b-instant",
-    model="meta-llama/llama-4-scout-17b-16e-instruct",
+    # model="meta-llama/llama-4-scout-17b-16e-instruct",
+    model="qwen/qwen3.6-27b",
     temperature=0.7,
-    max_tokens=2048,
+    max_tokens=4048,
+    # Ask Groq/Qwen not to include its chain-of-thought in the returned content.
+    reasoning_format="hidden",
 )
 
 
@@ -69,6 +78,23 @@ def _compact_text(value: str, limit: int = 20000) -> str:
     if len(text) <= limit:
         return text
     return text[:limit].rstrip() + "\n...[truncated]"
+
+
+def _user_facing_text(value) -> str:
+    """Return model text without reasoning blocks or internal analysis."""
+    text = str(value or "").strip()
+
+    # Some reasoning models still emit their hidden reasoning as tagged text.
+    text = re.sub(r"<think>.*?</think>", "", text, flags=re.IGNORECASE | re.DOTALL)
+    text = re.sub(r"<analysis>.*?</analysis>", "", text, flags=re.IGNORECASE | re.DOTALL)
+
+    # Handle an incomplete opening/closing tag if generation was truncated.
+    text = re.sub(r"<think>.*$", "", text, flags=re.IGNORECASE | re.DOTALL)
+    text = re.sub(r"^.*?</think>", "", text, flags=re.IGNORECASE | re.DOTALL)
+    text = re.sub(r"<analysis>.*$", "", text, flags=re.IGNORECASE | re.DOTALL)
+    text = re.sub(r"^.*?</analysis>", "", text, flags=re.IGNORECASE | re.DOTALL)
+
+    return text.strip()
 
 class TravelState(TypedDict):
     """
@@ -142,11 +168,13 @@ def itinerary_agent(state:TravelState):
     except BadRequestError:
         itinerary_response = AIMessage(content="I could not generate the itinerary because the provided travel data was too large for the model request.")
     
-    itinerary_text = itinerary_response.content if itinerary_response else "No itinerary generated."
+    itinerary_text = _user_facing_text(
+        itinerary_response.content if itinerary_response else "No itinerary generated."
+    )
 
     return {
         "itinerary":itinerary_text,
-        "messages":[itinerary_response],
+        "messages":[AIMessage(content=itinerary_text)],
         "llm_calls_made":state.get("llm_calls_made", 0) + 1
     }
 
@@ -168,7 +196,7 @@ def final_agent(state:TravelState):
     Hotels: {compact_hotel_results}
     Itinerary: {compact_itinerary}
 
-    Format the final answer beautifully usint these sections:
+    Format the final answer beautifully using these sections:
 
     1. Trip Summary
     2. Flight Details
@@ -178,6 +206,8 @@ def final_agent(state:TravelState):
     6. Final Recommendations
 
     Important:
+    - Don't repeat what is written here in thinking steps.
+    - Don't include and don't send thinking steps or internal reasoning in the final answer.
     - Be clear and practical.
     - Mention that live flight API may not provide ticket prices if pricing is unavailable.
     - Keep the response not too lengthy and useful for real travel planning.
@@ -192,8 +222,12 @@ def final_agent(state:TravelState):
     except BadRequestError:
         response = AIMessage(content="I could not generate the final travel response because the request was too large for the model.")
     
+    final_text = _user_facing_text(response.content if response else "")
+    if not final_text:
+        final_text = "I could not generate a travel response. Please try again."
+
     return {
-        "messages": [response],
+        "messages": [AIMessage(content=final_text)],
         "llm_calls_made" : state.get("llm_calls_made",0)+1
     }
 
@@ -253,7 +287,7 @@ def run_travel_agent(user_input:str, thread_id: str | None = None):
         "llm_calls_made":0
     },config=config)
 
-    final_answer = result["messages"][-1].content
+    final_answer = _user_facing_text(result["messages"][-1].content)
 
     return {
             "thread_id":thread_id,

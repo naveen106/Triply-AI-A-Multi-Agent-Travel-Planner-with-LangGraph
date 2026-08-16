@@ -36,7 +36,11 @@ all coordinated through a LangGraph workflow.
 - AviationStack API
 
 ## Project Walkthrough
-![](static/)
+Homepage
+![](static/Homepage.jpg)
+
+Generated Plan
+![](static/GeneratedPlan.jpg)
 
 
 ## Project Structure

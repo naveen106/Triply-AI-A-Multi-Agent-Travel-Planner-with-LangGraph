@@ -59,12 +59,9 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 if not GROQ_API_KEY:
     raise ValueError("GROQ_API_KEY environment variable is not set. Please add your Groq API key to the .env file.")
 
-
 llm = ChatGroq(
     api_key=GROQ_API_KEY,
-    # model="llama-3.1-8b-instant",
-    # model="meta-llama/llama-4-scout-17b-16e-instruct",
-    model="qwen/qwen3.6-27b",
+    model="openai/gpt-oss-120b",
     temperature=0.7,
     max_tokens=4048,
     # Ask Groq/Qwen not to include its chain-of-thought in the returned content.
@@ -147,15 +144,12 @@ def itinerary_agent(state:TravelState):
     hotel_results = state.get("hotel_results","")
     
 
-    compact_flight_results = _compact_text(flight_results, 2500)
-    compact_hotel_results = _compact_text(hotel_results, 2500)
-
     itinerary_prompt = f"""
     User Query: {query}
     
-    Flight Results: {compact_flight_results}
+    Flight Results: {flight_results}
     
-    Hotel Results: {compact_hotel_results}
+    Hotel Results: {hotel_results}
     
     Please create a practical itinerary, budget-aware and easy to follow.
     """
@@ -166,7 +160,7 @@ def itinerary_agent(state:TravelState):
             HumanMessage(content=itinerary_prompt),
         ])
     except BadRequestError:
-        itinerary_response = AIMessage(content="I could not generate the itinerary because the provided travel data was too large for the model request.")
+        itinerary_response = AIMessage(content="I could not generate the itinerary because the provided travel data was too large for the model request or some other internal server error.")
     
     itinerary_text = _user_facing_text(
         itinerary_response.content if itinerary_response else "No itinerary generated."
@@ -185,23 +179,23 @@ def itinerary_agent(state:TravelState):
 #===================================
 
 def final_agent(state:TravelState):
-    compact_flight_results = _compact_text(state.get("flight_results", ""), 2000)
-    compact_hotel_results = _compact_text(state.get("hotel_results", ""), 2000)
-    compact_itinerary = _compact_text(state.get("itinerary", ""), 2000)
+    flight_results = state.get("flight_results", "")
+    hotel_results = state.get("hotel_results", "")
+    itinerary = state.get("itinerary", "")
 
     final_prompt = f"""
     Generate the final travel response for the user.
     User Request: {state['user_query']}
-    Flights: {compact_flight_results}
-    Hotels: {compact_hotel_results}
-    Itinerary: {compact_itinerary}
+    Flights: {flight_results}
+    Hotels: {hotel_results}
+    Itinerary: {itinerary}
 
     Format the final answer beautifully using these sections:
 
     1. Trip Summary
     2. Flight Details
     3. Hotel Details
-    4. Day-By-Day Itinerary
+    4. Day-By-Day Itinerary. In case of monthly(or more than 7 days) or more lengthy trip, you can use weekly or range of days (or do what u think is better).
     5. Estimated Budget
     6. Final Recommendations
 
@@ -209,8 +203,9 @@ def final_agent(state:TravelState):
     - Don't repeat what is written here in thinking steps.
     - Don't include and don't send thinking steps or internal reasoning in the final answer.
     - Be clear and practical.
+    - Don't give random trip plans if user query is not asking for it.
     - Mention that live flight API may not provide ticket prices if pricing is unavailable.
-    - Keep the response not too lengthy and useful for real travel planning.
+    - Keep the response concise and short(MUST), it mustn't be lengthy(just to the point) and must be useful for real travel planning.
 
     """
 
@@ -220,7 +215,7 @@ def final_agent(state:TravelState):
             HumanMessage(content=final_prompt),
         ])
     except BadRequestError:
-        response = AIMessage(content="I could not generate the final travel response because the request was too large for the model.")
+        response = AIMessage(content="I could not generate the final travel response because the request was too large for the model or some other internal server error.")
     
     final_text = _user_facing_text(response.content if response else "")
     if not final_text:

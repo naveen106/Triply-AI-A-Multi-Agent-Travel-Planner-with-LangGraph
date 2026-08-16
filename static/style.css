@@ -278,6 +278,10 @@ textarea::placeholder {
     color: #111827;
     border-radius: 22px;
     padding: 28px;
+    width: 95%;
+    max-width: 800px;
+    margin: 0 auto;
+    box-sizing: border-box;
 }
 
 .pdf-title {
@@ -293,7 +297,25 @@ textarea::placeholder {
     border: none;
     padding: 0;
     white-space: normal;
-    overflow-x: auto;
+    overflow-x: visible;
+}
+
+.result-box h1,
+.result-box h2,
+.result-box h3,
+.result-box table,
+.result-box tr,
+.result-box ul,
+.result-box ol {
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+@media print {
+    .pdf-content {
+        margin: 0;
+        padding: 24px;
+    }
 }
 
 .result-box h1,

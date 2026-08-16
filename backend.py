@@ -65,7 +65,7 @@ llm = ChatGroq(
     # model="meta-llama/llama-4-scout-17b-16e-instruct",
     model="qwen/qwen3.6-27b",
     temperature=0.7,
-    max_tokens=4048,
+    max_tokens=3048,
     # Ask Groq/Qwen not to include its chain-of-thought in the returned content.
     reasoning_format="hidden",
 )
@@ -205,7 +205,7 @@ def final_agent(state:TravelState):
     - Be clear and practical.
     - Don't give random trip plans if user query is not asking for it.
     - Mention that live flight API may not provide ticket prices if pricing is unavailable.
-    - Keep the response concise, it mustn't be lengthy and must be useful for real travel planning.
+    - Keep the response concise and short(MUST), it mustn't be lengthy and must be useful for real travel planning.
     - Keep friendly tone.
     """
 

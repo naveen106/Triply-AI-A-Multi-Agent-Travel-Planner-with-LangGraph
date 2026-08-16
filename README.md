@@ -35,6 +35,14 @@ all coordinated through a LangGraph workflow.
 - Exa API
 - AviationStack API
 
+## Project Walkthrough
+Homepage
+![](static/Homepage.jpg)
+
+Generated Plan
+![](static/GeneratedPlan.jpg)
+
+
 ## Project Structure
 
 ```text
@@ -56,7 +64,7 @@ Before running the project locally, make sure you have:
 - PostgreSQL running and accessible
 - API keys for:
   - Groq
-  - Tavily
+  - Exa
   - AviationStack
 
 

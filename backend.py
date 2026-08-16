@@ -202,13 +202,11 @@ def final_agent(state:TravelState):
     6. Final Recommendations
 
     Important:
-    - Don't repeat what is written here in thinking steps.
-    - Don't include and don't send thinking steps or internal reasoning in the final answer.
     - Be clear and practical.
     - Don't give random trip plans if user query is not asking for it.
     - Mention that live flight API may not provide ticket prices if pricing is unavailable.
-    - Keep the response concise and short(MUST), it mustn't be lengthy(just to the point) and must be useful for real travel planning.
-
+    - Keep the response concise, it mustn't be lengthy and must be useful for real travel planning.
+    - Keep friendly tone.
     """
 
     try:

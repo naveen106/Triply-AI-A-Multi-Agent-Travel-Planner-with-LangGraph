@@ -32,7 +32,7 @@ all coordinated through a LangGraph workflow.
 - LangChain
 - Groq LLMs
 - PostgreSQL
-- Tavily API
+- Exa API
 - AviationStack API
 
 ## Project Structure
